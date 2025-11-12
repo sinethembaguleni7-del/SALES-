@@ -1,0 +1,58 @@
+SELECT 
+    DATE,
+    SALES,
+    COST_OF_SALES,
+    QUANTITY_SOLD,
+
+    -- Daily sales price per unit
+    ROUND(SALES / NULLIF(QUANTITY_SOLD, 0)) AS PRICE_PER_UNIT,
+
+    -- Daily gross profit and % profit
+    ROUND(SALES - COST_OF_SALES) AS GROSS_PROFIT,
+    ROUND((SALES - COST_OF_SALES) / NULLIF(SALES, 0)) * 100 AS GROSS_PROFIT_PERCENT,
+
+    -- Daily gross profit per unit
+    ROUND((SALES - COST_OF_SALES) / NULLIF(QUANTITY_SOLD, 0)) AS GROSS_PROFIT_PER_UNIT,
+
+    -- Total revenue (static for reference)
+    ROUND(SELECT SUM(SALES) FROM "SALES"."PUBLIC"."SHOP") AS TOTAL_REVENUE,
+
+    -- Average unit sales price
+    ROUND(SELECT AVG(SALES / NULLIF(QUANTITY_SOLD, 0)) FROM "SALES"."PUBLIC"."SHOP") AS AVG_UNIT_SALES_PRICE,
+
+    -- Identify highest and lowest sales days
+    CASE 
+        WHEN SALES = (SELECT MAX(SALES) FROM "SALES"."PUBLIC"."SHOP") THEN 'HIGHEST SALES DAY'
+        WHEN SALES = (SELECT MIN(SALES) FROM "SALES"."PUBLIC"."SHOP") THEN 'LOWEST SALES DAY'
+        ELSE 'NORMAL SALES'
+    END AS SALES_STATUS,
+
+    -- Show profit/loss
+    CASE 
+        WHEN COST_OF_SALES > SALES THEN 'LOSS'
+        ELSE 'PROFIT'
+    END AS STATUS,
+
+    -- Promotion periods (example)
+    CASE 
+        WHEN DATE BETWEEN '2014-01-01' AND '2014-02-01' THEN 'PROMOTION PERIOD 1'
+        WHEN DATE BETWEEN '2014-03-01' AND '2014-04-01' THEN 'PROMOTION PERIOD 2'
+        WHEN DATE BETWEEN '2014-06-01' AND '2014-07-01' THEN 'PROMOTION PERIOD 3'
+        ELSE 'REGULAR PERIOD'
+    END AS PROMOTION_PERIOD,
+
+    -- Price Elasticity of Demand (PED)
+    (
+        (
+            ROUND(QUANTITY_SOLD - LAG(QUANTITY_SOLD) OVER (ORDER BY DATE)) 
+            / NULLIF(LAG(QUANTITY_SOLD) OVER (ORDER BY DATE), 0)
+        ) 
+        / 
+        (
+            ((SALES / NULLIF(QUANTITY_SOLD, 0)) - LAG(SALES / NULLIF(QUANTITY_SOLD, 0)) OVER (ORDER BY DATE)) 
+            / NULLIF(LAG(SALES / NULLIF(QUANTITY_SOLD, 0)) OVER (ORDER BY DATE), 0)
+        )
+    ) AS PRICE_ELASTICITY_OF_DEMAND
+
+FROM "SALES"."PUBLIC"."SHOP"
+ORDER BY DATE;
