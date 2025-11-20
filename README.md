@@ -49,7 +49,7 @@ This repository is meant to:
 * Support future projects that require historical sales analysis.
 
 
-## 🔧 Tools and Technologies Used
+##  Tools and Technologies Used
 
 * **SQL** for querying and transforming data.
 * **Google Looker Studio** for dashboard creation (based on included PDF).
